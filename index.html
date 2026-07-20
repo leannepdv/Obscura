@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Obscura</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #07060f;
+      --title: #f0ecff;
+      --subtitle: rgba(200, 190, 255, 0.45);
+      --glow: rgba(140, 80, 255, 0.18);
+    }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', sans-serif;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    .title-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      letter-spacing: 0.35em;
+      color: var(--title);
+      text-transform: uppercase;
+      text-shadow:
+        0 0 40px rgba(160, 100, 255, 0.5),
+        0 0 80px rgba(100, 60, 200, 0.25);
+    }
+
+    .rule {
+      width: 40px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(180, 140, 255, 0.5), transparent);
+    }
+
+    canvas {
+      display: block;
+      width: min(520px, 92vw);
+      height: min(520px, 92vw);
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      color: var(--subtitle);
+      text-transform: uppercase;
+      position: relative;
+      z-index: 2;
+      transition: opacity 0.6s ease;
+    }
+
+    .hint.hidden {
+      opacity: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      h1 { text-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="title-wrap">
+    <h1>Obscura</h1>
+    <div class="rule"></div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <p class="hint" id="hint">click to reveal</p>
+
+  <script src="https://unpkg.com/@rive-app/canvas@latest"></script>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const hint = document.getElementById('hint');
+
+    // Match canvas resolution to display size
+    const size = Math.min(520, window.innerWidth * 0.92);
+    canvas.width = size * window.devicePixelRatio;
+    canvas.height = size * window.devicePixelRatio;
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+
+    const r = new rive.Rive({
+      src: 'obscura.riv',
+      canvas: canvas,
+      autoplay: true,
+      stateMachines: 'State Machine 1',
+      onLoad: () => {
+        r.resizeDrawingSurfaceToCanvas();
+
+        const inputs = r.stateMachineInputs('State Machine 1');
+        const shake = inputs.find(i => i.name === 'Shake');
+        const triggerResponse = inputs.find(i => i.name === 'triggerResponse');
+        const responseIndex = inputs.find(i => i.name === 'Response Index');
+
+        let isAnimating = false;
+
+        canvas.addEventListener('click', () => {
+          if (isAnimating) return;
+          isAnimating = true;
+
+          // Hide hint after first click
+          hint.classList.add('hidden');
+
+          // Set a random response (0–4)
+          if (responseIndex) {
+            responseIndex.value = Math.floor(Math.random() * 5);
+          }
+
+          // Fire shake
+          if (shake) shake.fire();
+
+          // Fire response trigger after shake + reset animations finish
+          // Adjust this delay (ms) to match your shake + reset total duration
+          setTimeout(() => {
+            if (triggerResponse) triggerResponse.fire();
+            isAnimating = false;
+          }, 2000);
+        });
+      },
+      onLoadError: (e) => {
+        console.error('Rive load error:', e);
+      }
+    });
+  </script>
+</body>
+</html>
