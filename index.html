@@ -32,7 +32,6 @@
         radial-gradient(ellipse at 97% 97%,#8822cc 0%, rgba(136,34,204,0)  50%);
     }
 
-    /* Dark overlay so text and ball stay readable over the bright gradient */
     body::before {
       content: '';
       position: fixed;
@@ -42,7 +41,6 @@
       z-index: 1;
     }
 
-    /* Vignette */
     body::after {
       content: '';
       position: fixed;
@@ -52,7 +50,6 @@
       z-index: 2;
     }
 
-    /* Film grain */
     .grain {
       position: fixed;
       inset: -50%;
@@ -210,9 +207,8 @@
     <p class="hint" id="hint">click to ask</p>
   </div>
 
-  <script src="https://unpkg.com/@rive-app/canvas-advanced@latest"></script>
+  <script src="https://unpkg.com/@rive-app/webgl2@latest"></script>
   <script>
-    // Particles
     (function(){
       const pc  = document.getElementById('particles');
       const ctx = pc.getContext('2d');
@@ -239,7 +235,6 @@
       tick();
     })();
 
-    // Rive
     const canvas = document.getElementById('canvas');
     const hint   = document.getElementById('hint');
     const size   = Math.min(480, window.innerWidth * 0.88);
@@ -252,14 +247,13 @@
       src: 'obscura.riv',
       canvas: canvas,
       autoplay: true,
-      useOffscreenRenderer: true,
       stateMachines: 'State Machine 1',
       onLoad: () => {
         r.resizeDrawingSurfaceToCanvas();
-        const inputs       = r.stateMachineInputs('State Machine 1');
-        const shake        = inputs.find(i => i.name === 'Shake');
-        const triggerResp  = inputs.find(i => i.name === 'triggerResponse');
-        const responseIdx  = inputs.find(i => i.name === 'Response Index');
+        const inputs      = r.stateMachineInputs('State Machine 1');
+        const shake       = inputs.find(i => i.name === 'Shake');
+        const triggerResp = inputs.find(i => i.name === 'triggerResponse');
+        const responseIdx = inputs.find(i => i.name === 'Response Index');
         let busy = false;
 
         canvas.addEventListener('click', () => {
