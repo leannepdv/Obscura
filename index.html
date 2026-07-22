@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Obscura</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=EB+Garamond:ital,wght@0,400;1,400&family=Inter:wght@300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      background-color: #7033aa;
+      background-image:
+        radial-gradient(ellipse at 3% 97%, #6ef07c 0%, rgba(110,240,124,0) 52%),
+        radial-gradient(ellipse at 3% 3%,  #c87aaa 0%, rgba(200,120,170,0) 50%),
+        radial-gradient(ellipse at 97% 3%, #3d00bb 0%, rgba(61,0,187,0)    55%),
+        radial-gradient(ellipse at 97% 97%,#8822cc 0%, rgba(136,34,204,0)  50%);
+    }
+
+    /* Dark overlay so text and ball stay readable over the bright gradient */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 2, 14, 0.52);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Vignette */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 30%, rgba(2,1,8,0.7) 100%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Film grain */
+    .grain {
+      position: fixed;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      pointer-events: none;
+      z-index: 3;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 128px 128px;
+      animation: grain 0.5s steps(1) infinite;
+    }
+
+    @keyframes grain {
+      0%  { transform: translate(0,0); }
+      20% { transform: translate(3%,2%); }
+      40% { transform: translate(-2%,4%); }
+      60% { transform: translate(2%,-3%); }
+      80% { transform: translate(-3%,1%); }
+      100%{ transform: translate(1%,-2%); }
+    }
+
+    #particles {
+      position: fixed;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .page {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 20px;
+      width: 100%;
+    }
+
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 400;
+      font-size: clamp(2.8rem, 7vw, 6rem);
+      color: #fff;
+      letter-spacing: 0.02em;
+      text-shadow: 0 2px 40px rgba(0,0,0,0.4);
+      margin: 0;
+    }
+
+    .ornament {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.55rem;
+      letter-spacing: 0.4em;
+    }
+
+    .ornament::before, .ornament::after {
+      content: '';
+      display: block;
+      width: 44px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    }
+
+    .tagline {
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      font-size: clamp(0.8rem, 1.8vw, 1rem);
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 0.05em;
+      text-align: center;
+      max-width: 360px;
+      line-height: 1.8;
+      margin: 0 0 22px 0;
+    }
+
+    .glow-wrap {
+      position: relative;
+    }
+
+    .glow-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -30px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(80,30,160,0.3) 0%, transparent 70%);
+      animation: glowPulse 5s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes glowPulse {
+      0%,100% { opacity: 0.7; transform: scale(1); }
+      50%      { opacity: 1;   transform: scale(1.06); }
+    }
+
+    canvas#canvas {
+      display: block;
+      width: min(480px, 88vw);
+      height: min(480px, 88vw);
+      cursor: pointer;
+      position: relative;
+      z-index: 2;
+    }
+
+    .hint {
+      margin-top: 14px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+      transition: opacity 1s ease;
+    }
+
+    .hint.hidden {
+      opacity: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .grain { animation: none; }
+      .glow-wrap::before { animation: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="grain"></div>
+  <canvas id="particles"></canvas>
+
+  <div class="page">
+    <div class="title-block">
+      <h1>Obscura</h1>
+      <div class="ornament">✦</div>
+    </div>
+
+    <p class="tagline">
+      Born from a séance in 1944.<br>Sold as a toy. Never fully explained.
+    </p>
+
+    <div class="glow-wrap">
+      <canvas id="canvas"></canvas>
+    </div>
+
+    <p class="hint" id="hint">click to ask</p>
+  </div>
+
+  <script src="https://unpkg.com/@rive-app/canvas-advanced@latest"></script>
+  <script>
+    // Particles
+    (function(){
+      const pc  = document.getElementById('particles');
+      const ctx = pc.getContext('2d');
+      function resize(){ pc.width = window.innerWidth; pc.height = window.innerHeight; }
+      resize();
+      window.addEventListener('resize', resize);
+      function rnd(a,b){ return Math.random()*(b-a)+a; }
+      const pts = Array.from({length:50}, () => ({
+        x: rnd(0,pc.width), y: rnd(pc.height*0.1, pc.height),
+        r: rnd(0.4,1.2), s: rnd(0.08,0.3), o: rnd(0.05,0.18), d: rnd(-0.06,0.06)
+      }));
+      function tick(){
+        ctx.clearRect(0,0,pc.width,pc.height);
+        for(const p of pts){
+          ctx.beginPath();
+          ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+          ctx.fillStyle=`rgba(220,200,255,${p.o})`;
+          ctx.fill();
+          p.y-=p.s; p.x+=p.d;
+          if(p.y<-4){ p.y=pc.height+4; p.x=rnd(0,pc.width); }
+        }
+        requestAnimationFrame(tick);
+      }
+      tick();
+    })();
+
+    // Rive
+    const canvas = document.getElementById('canvas');
+    const hint   = document.getElementById('hint');
+    const size   = Math.min(480, window.innerWidth * 0.88);
+    canvas.width  = size * devicePixelRatio;
+    canvas.height = size * devicePixelRatio;
+    canvas.style.width  = size + 'px';
+    canvas.style.height = size + 'px';
+
+    const r = new rive.Rive({
+      src: 'obscura.riv',
+      canvas: canvas,
+      autoplay: true,
+      useOffscreenRenderer: true,
+      stateMachines: 'State Machine 1',
+      onLoad: () => {
+        r.resizeDrawingSurfaceToCanvas();
+        const inputs       = r.stateMachineInputs('State Machine 1');
+        const shake        = inputs.find(i => i.name === 'Shake');
+        const triggerResp  = inputs.find(i => i.name === 'triggerResponse');
+        const responseIdx  = inputs.find(i => i.name === 'Response Index');
+        let busy = false;
+
+        canvas.addEventListener('click', () => {
+          if (busy) return;
+          busy = true;
+          hint.classList.add('hidden');
+          if (responseIdx) responseIdx.value = Math.floor(Math.random() * 5);
+          if (shake) shake.fire();
+          setTimeout(() => {
+            if (triggerResp) triggerResp.fire();
+            busy = false;
+          }, 2000);
+        });
+      },
+      onLoadError: e => console.error('Rive error:', e)
+    });
+  </script>
+</body>
+</html>
